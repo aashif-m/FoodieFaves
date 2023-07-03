@@ -5,7 +5,7 @@ import java.util.InputMismatchException;
 public class FoodieFavesQueueManager {
     public final static int[] QUEUE_SIZES = {2, 3, 5};
     public final static int NUMBER_OF_QUEUES = QUEUE_SIZES.length;
-    public final static int BURGER_PRICE = 500;
+    public final static int BURGER_PRICE = 650;
     public static FoodQueue[] queues = new FoodQueue[NUMBER_OF_QUEUES];
     public static int burgerStock = 50;
     public static void main(String[] args){
@@ -96,7 +96,7 @@ public class FoodieFavesQueueManager {
         int maxQueueSize = getMaxValue(QUEUE_SIZES);
         for(int i = 0; i < maxQueueSize; i++){
             for(FoodQueue queue : queues){
-                if(!queue.isQueueEmpty()){
+                if(queue.isQueueEmpty()){
                     if(i < queue.getQueueSize()){
                         System.out.print("O ");
                     } else if(i < queue.getMaxQueueSize()){
@@ -123,7 +123,7 @@ public class FoodieFavesQueueManager {
 
     public static boolean emptyQueuesExists(FoodQueue[] queues){
         for(FoodQueue queue : queues){
-            if(!queue.isQueueEmpty()){
+            if(queue.isQueueEmpty()){
                 return true;
             }
         }
@@ -136,10 +136,10 @@ public class FoodieFavesQueueManager {
         System.out.print("Enter last name: ");
         String lastName = input.nextLine();
         System.out.print("Enter number of burgers: ");
-        int burgersRequried = input.nextInt();
+        int burgersRequired = input.nextInt();
         if(emptyQueuesExists(queues)){
             FoodQueue shortestQueue = getShortestQueue(queues);
-            shortestQueue.addCustomer(new Customer(firstName, lastName, burgersRequried));
+            shortestQueue.addCustomer(new Customer(firstName, lastName, burgersRequired));
         } else {
             System.out.println("No empty queues available");
         }
@@ -168,8 +168,9 @@ public class FoodieFavesQueueManager {
         int queueNumber = input.nextInt();
         if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
             FoodQueue queue = queues[queueNumber - 1];
-            if(!queue.isQueueEmpty()){
+            if(queue.isQueueEmpty()){
                 queue.addQueueIncome(queue.getCustomer(0).getBurgersRequired() * BURGER_PRICE);
+                burgerStock -= queue.getCustomer(0).getBurgersRequired();
                 System.out.println(queue.getCustomer(0).getFullName() + " has been served");
                 queue.removeCustomer(0);
             } else {

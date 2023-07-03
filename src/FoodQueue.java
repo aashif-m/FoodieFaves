@@ -42,7 +42,7 @@ public class FoodQueue {
      }
 
      public void addQueueIncome(int queueIncome) {
-          queueIncome += queueIncome;
+          this.queueIncome += queueIncome;
      }
 
      public int getQueueIncome() {

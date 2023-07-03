@@ -2,7 +2,7 @@ import java.util.ArrayList;
 
 public class FoodQueue {
      private ArrayList<Customer> customerList = new ArrayList<Customer>();
-     private int maxQueueSize;
+     private final int maxQueueSize;
      private int queueIncome = 0;
 
      public FoodQueue(int maxQueueSize) {
@@ -21,10 +21,10 @@ public class FoodQueue {
           return customerList;
      }
 
-     public String[] getCustomerNames() {
-          String[] names = new String[customerList.size()];
+     public ArrayList<String> getCustomerNames() {
+          ArrayList<String> names = new ArrayList<String>();
           for (int i = 0; i < customerList.size(); i++) {
-               names[i] = customerList.get(i).getFullName();
+               names.add(customerList.get(i).getFullName());
           }
           return names;
      }
@@ -34,7 +34,23 @@ public class FoodQueue {
      }
 
      public boolean isQueueEmpty() {
-          return customerList.isEmpty();
+          return customerList.size() < maxQueueSize;
+     }
+
+     public void removeCustomer(int customerPosition) {
+          customerList.remove(customerPosition);
+     }
+
+     public void addQueueIncome(int queueIncome) {
+          queueIncome += queueIncome;
+     }
+
+     public int getQueueIncome() {
+          return queueIncome;
+     }
+
+     public Customer getCustomer(int i) {
+          return customerList.get(i);
      }
 
      

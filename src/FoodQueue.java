@@ -17,6 +17,10 @@ public class FoodQueue {
           return maxQueueSize;
      }
 
+     public void setQueueIncome(int queueIncome) {
+          this.queueIncome = queueIncome;
+     }
+
      public ArrayList<Customer> getCustomerList() {
           return customerList;
      }
@@ -33,8 +37,12 @@ public class FoodQueue {
                customerList.add(customer);
      }
 
+     public boolean isQueueFull() {
+          return customerList.size() == maxQueueSize;
+     }
+
      public boolean isQueueEmpty() {
-          return customerList.size() < maxQueueSize;
+          return customerList.size() == 0;
      }
 
      public void removeCustomer(int customerPosition) {

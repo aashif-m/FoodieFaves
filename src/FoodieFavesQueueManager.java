@@ -1,6 +1,10 @@
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class FoodieFavesQueueManager {
     public final static int[] QUEUE_SIZES = {2, 3, 5};
@@ -8,6 +12,7 @@ public class FoodieFavesQueueManager {
     public final static int BURGER_PRICE = 650;
     public static FoodQueue[] queues = new FoodQueue[NUMBER_OF_QUEUES];
     public static int burgerStock = 50;
+    public final static String SAVE_FILE_NAME = "data.txt";
     public static void main(String[] args){
         setupQueues();
         boolean exit = false;
@@ -27,8 +32,8 @@ public class FoodieFavesQueueManager {
                 case "103", "RCQ" -> removeCustomerLocation(input);
                 case "104", "PCQ" -> removeServedCustomer(input);
                 case "105", "VCS" -> viewSortedCustomerNames();
-//                case "106", "SPD" -> storeProgramData(SAVE_FILE_NAME, queues, burgerStock);
-//                case "107", "LPD" -> loadProgramData(SAVE_FILE_NAME, queues, input);
+                case "106", "SPD" -> storeProgramData(SAVE_FILE_NAME, queues, burgerStock);
+                case "107", "LPD" -> loadProgramData(SAVE_FILE_NAME, queues);
                 case "108", "STK" -> viewRemainingBurgerStock();
                 case "109", "AFS" -> addBurgerStock(input);
                 case "110", "IFQ" -> viewQueueIncome(queues);
@@ -123,7 +128,7 @@ public class FoodieFavesQueueManager {
 
     public static boolean emptyQueuesExists(FoodQueue[] queues){
         for(FoodQueue queue : queues){
-            if(queue.isQueueEmpty()){
+            if(!queue.isQueueFull()){
                 return true;
             }
         }
@@ -168,7 +173,7 @@ public class FoodieFavesQueueManager {
         int queueNumber = input.nextInt();
         if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
             FoodQueue queue = queues[queueNumber - 1];
-            if(queue.isQueueEmpty()){
+            if(!queue.isQueueEmpty()){
                 queue.addQueueIncome(queue.getCustomer(0).getBurgersRequired() * BURGER_PRICE);
                 burgerStock -= queue.getCustomer(0).getBurgersRequired();
                 System.out.println(queue.getCustomer(0).getFullName() + " has been served");
@@ -240,6 +245,50 @@ public class FoodieFavesQueueManager {
     public static void viewQueueIncome(FoodQueue[] queues){
         for(int i = 0; i < queues.length; i++){
             System.out.println("Queue " + (i + 1) + " Income: " + queues[i].getQueueIncome());
+        }
+    }
+
+    public static void storeProgramData(String fileName, FoodQueue[] queues, int burgerStock) {
+        try {
+            FileWriter writer = new FileWriter(fileName);
+            for (FoodQueue queue : queues) {
+                writer.write(queue.getQueueIncome() + ",");
+                ArrayList<Customer> customers = queue.getCustomerList();
+                for (Customer customer : customers) {
+                    writer.write(customer.getFullName() + ":" + customer.getBurgersRequired() + ",");
+                }
+                writer.write(";");
+            }
+            writer.write(burgerStock);
+            writer.close();
+        } catch (IOException e) {
+            System.out.println("An error occurred while storing program data.");
+        }
+    }
+
+    public static void loadProgramData(String fileName, FoodQueue[] queues) {
+        try {
+            File file = new File(fileName);
+            Scanner input = new Scanner(file);
+            String data = input.nextLine();
+            String[] dataArray = data.split(";");
+            for (int i = 0; i < dataArray.length - 1; i++) {
+                String[] queueData = dataArray[i].split(",");
+                queues[i].setQueueIncome(Integer.parseInt(queueData[0]));
+                for (int j = 1; j < queueData.length; j++) {
+                    String[] customerData = queueData[j].split(":");
+                    String[] nameData = customerData[0].split(" ");
+                    String firstName = nameData[0];
+                    String lastName = nameData[1];
+                    int burgersRequired = Integer.parseInt(customerData[1]);
+                    Customer customer = new Customer(firstName, lastName, burgersRequired);
+                    queues[i].addCustomer(customer);
+                }
+            }
+            burgerStock = Integer.parseInt(dataArray[dataArray.length - 1]);
+            input.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("File not found.");
         }
     }
 

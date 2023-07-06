@@ -11,6 +11,7 @@ public class FoodieFavesQueueManager {
     public final static int NUMBER_OF_QUEUES = QUEUE_SIZES.length;
     public final static int BURGER_PRICE = 650;
     public static FoodQueue[] queues = new FoodQueue[NUMBER_OF_QUEUES];
+    public static WaitingQueue waitingQueue = new WaitingQueue(10);
     public static int burgerStock = 50;
     public final static String SAVE_FILE_NAME = "data.txt";
     public static void main(String[] args){

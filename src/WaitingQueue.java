@@ -40,12 +40,14 @@ public class WaitingQueue {
 
     public void enqueue (Customer customer) {
         if(isFull()) {
-            resize();
-        } else if (isEmpty()) {
-            front++;
+            System.out.println("Error: Queue is full");
+        } else {
+            if (isEmpty()) {
+                front++;
+            }
+            rear = (rear + 1) % queue.length;
+            queue[rear] = customer;
         }
-        rear = (rear + 1) % queue.length;
-        queue[rear] = customer;
     }
 
     public Customer dequeue() {
@@ -78,21 +80,5 @@ public class WaitingQueue {
         return (rear + 1) % queue.length == front;
     }
 
-    private void resize() {
-        Customer[] tempArr = new Customer[queue.length*2];
-        int i = 0;
-        int j = front;
-
-        do {
-            tempArr[i++] = queue[j];
-            j = (j+1) % queue.length;
-        } while (j != front);
-
-        front = 0;
-        rear = queue.length-1;
-        queue = tempArr;
-    }
-
-
-
+    
 }

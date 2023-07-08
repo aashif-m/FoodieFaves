@@ -14,11 +14,16 @@ public class FoodieFavesQueueManager {
     public static WaitingQueue waitingQueue = new WaitingQueue(10);
     public static int burgerStock = 50;
     public final static String SAVE_FILE_NAME = "data.txt";
+
     public static void main(String[] args){
         setupQueues();
         boolean exit = false;
 
         while(!exit){
+            System.out.println();
+            System.out.println("==========================");
+            System.out.println("Foodie Faves Queue Manager");
+            System.out.println("==========================");
             printMenu();
 
             Scanner input = new Scanner(System.in);
@@ -84,14 +89,22 @@ public class FoodieFavesQueueManager {
     
     public static void viewAllQueues(FoodQueue[] queues){
         int maxQueueSize = getMaxValue(QUEUE_SIZES);
+        String header = "*    Cashiers    *";
+
+
+        // Print header
+        System.out.println("*".repeat(header.length()));
+        System.out.println(header);
+        System.out.println("*".repeat(header.length()));
+
         for(int i = 0; i < maxQueueSize; i++){
             for(FoodQueue queue : queues){
                 if(i < queue.getQueueSize()){
-                    System.out.print("O ");
+                    System.out.print("O \t");
                 } else if(i < queue.getMaxQueueSize()){
-                    System.out.print("X ");
+                    System.out.print("X \t");
                 } else {
-                    System.out.print("  ");
+                    System.out.print("  \t");
                 }
             }
             System.out.println();
@@ -100,18 +113,26 @@ public class FoodieFavesQueueManager {
 
     public static void viewEmptyQueues(FoodQueue[] queues){
         int maxQueueSize = getMaxValue(QUEUE_SIZES);
+        String header = "*    Cashiers    *";
+
+
+        // Print header
+        System.out.println("*".repeat(header.length()));
+        System.out.println(header);
+        System.out.println("*".repeat(header.length()));
+
         for(int i = 0; i < maxQueueSize; i++){
             for(FoodQueue queue : queues){
                 if(queue.isQueueEmpty()){
                     if(i < queue.getQueueSize()){
-                        System.out.print("O ");
+                        System.out.print("O \t");
                     } else if(i < queue.getMaxQueueSize()){
-                        System.out.print("X ");
+                        System.out.print("X \t");
                     } else {
-                        System.out.print("  ");
+                        System.out.print("  \t");
                     }
                 } else {
-                    System.out.print("  ");}
+                    System.out.print("  \t");}
             }
             System.out.println();
         }
@@ -137,64 +158,162 @@ public class FoodieFavesQueueManager {
     }
 
     public static void addCustomer(Scanner input){
-        System.out.print("Enter first name: ");
-        String firstName = input.nextLine();
-        System.out.print("Enter last name: ");
-        String lastName = input.nextLine();
-        System.out.print("Enter number of burgers: ");
-        int burgersRequired = input.nextInt();
-        if(emptyQueuesExists(queues)){
-            FoodQueue shortestQueue = getShortestQueue(queues);
-            shortestQueue.addCustomer(new Customer(firstName, lastName, burgersRequired));
-        } else {
-            System.out.println("No empty queues available. Adding customer to waiting queue.");
-            waitingQueue.enqueue(new Customer(firstName, lastName, burgersRequired));
+        try {
+            System.out.print("Enter first name (-1 to exit): ");
+            String firstName = input.nextLine();
+            if (firstName.equals("-1")) {
+                return;
+            }
+            System.out.print("Enter last name (-1 to exit): ");
+            String lastName = input.nextLine();
+            if (lastName.equals("-1")) {
+                return;
+            }
+            int burgersRequired = 0;
+            boolean validInput = false;
+            while(!validInput){
+                try{
+                    System.out.print("Enter number of burgers (-1 to exit): ");
+                    String burgersInput = input.nextLine();
+                    if (burgersInput.equals("-1")) {
+                        return;
+                    }
+                    burgersRequired = Integer.parseInt(burgersInput);
+                    if (burgersRequired > 50 && burgersRequired < 1) {
+                        System.out.println("Invalid input. Please enter a valid integer between 1 and 50.");
+                    } else {
+                        validInput = true;
+                    }
+                } catch(NumberFormatException e){
+                    System.out.println("Invalid input. Please enter a valid integer.");
+                }
+            }
+            if(emptyQueuesExists(queues)){
+                FoodQueue shortestQueue = getShortestQueue(queues);
+                shortestQueue.addCustomer(new Customer(firstName, lastName, burgersRequired));
+            } else {
+                System.out.println("No empty queues available. Adding customer to waiting queue.");
+                waitingQueue.enqueue(new Customer(firstName, lastName, burgersRequired));
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while adding customer: " + e.getMessage());
         }
     }
 
-    public static void removeCustomerLocation(Scanner input){
-        System.out.print("Enter Queue Number (1-3): ");
-        int queueNumber = input.nextInt();
-        System.out.print("Enter Customer Position: ");
-        int customerPosition = input.nextInt();
-        if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
-            FoodQueue queue = queues[queueNumber - 1];
-            if(customerPosition > 0 && customerPosition <= queue.getQueueSize()){
-                System.out.println(queue.getCustomer(customerPosition - 1).getFullName() + " has been removed");
-                queue.removeCustomer(customerPosition - 1);
-                if(!waitingQueue.isEmpty()){
-                    Customer nextCustomer = waitingQueue.dequeue();
-                    queue.addCustomer(nextCustomer);
-                    System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
-                }
-            } else {
-                System.out.println("Invalid customer position");
+    public static void printQueueInfo(){
+        for(int i = 0; i < NUMBER_OF_QUEUES; i++){
+            System.out.print("Queue " + (i + 1) + " : ");
+            ArrayList<Customer> customerList = queues[i].getCustomerList();
+            for(Customer customer : customerList){
+                System.out.print(customer.getFullName() + ", ");
             }
-        } else {
-            System.out.println("Invalid queue number");
+            System.out.println();
+        }
+        System.out.print("Waiting Queue: ");
+        ArrayList<Customer> waitingCustomers = waitingQueue.getCustomerList();
+        for(Customer customer : waitingCustomers){
+            System.out.print(customer.getFullName() + ", ");
+        }
+        System.out.println();
+    }
+
+    public static void removeCustomerLocation(Scanner input){
+        printQueueInfo();
+        try {
+            boolean validInput = false;
+            int queueNumber = 0;
+            while(!validInput){
+                System.out.print("Enter Queue Number (1-3): ");
+                String queueInput = input.nextLine();
+                if(queueInput.equals("-1")){
+                    return;
+                }
+                try{
+                    queueNumber = Integer.parseInt(queueInput);
+                    if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
+                        validInput = true;
+                    } else {
+                        System.out.println("Invalid queue number");
+                    }
+                } catch(NumberFormatException e){
+                    System.out.println("Invalid input. Please enter a valid integer.");
+                }
+            }
+            validInput = false;
+            int customerPosition = 0;
+            while(!validInput){
+                System.out.print("Enter Customer Position: ");
+                String customerInput = input.nextLine();
+                if(customerInput.equals("-1")){
+                    return;
+                }
+                try{
+                    customerPosition = Integer.parseInt(customerInput);
+                    if(customerPosition > 0 && customerPosition <= queues[queueNumber - 1].getQueueSize()){
+                        validInput = true;
+                    } else {
+                        System.out.println("Invalid customer position");
+                    }
+                } catch(NumberFormatException e){
+                    System.out.println("Invalid input. Please enter a valid integer.");
+                }
+            }
+            FoodQueue queue = queues[queueNumber - 1];
+            System.out.println(queue.getCustomer(customerPosition - 1).getFullName() + " has been removed");
+            queue.removeCustomer(customerPosition - 1);
+            if(!waitingQueue.isEmpty()){
+                Customer nextCustomer = waitingQueue.dequeue();
+                queue.addCustomer(nextCustomer);
+                System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
+            }
+        } catch (Exception e) {
+            System.out.println("Error occurred while removing customer: " + e.getMessage());
         }
     }
 
     public static void removeServedCustomer(Scanner input){
-        System.out.print("Enter Queue Number (1-3): ");
-        int queueNumber = input.nextInt();
-        if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
+        printQueueInfo();
+        try {
+            boolean validInput = false;
+            int queueNumber = 0;
+            while(!validInput){
+                System.out.print("Enter Queue Number (1-3) (-1 to exit): ");
+                String queueInput = input.nextLine();
+                if(queueInput.equals("-1")){
+                    return;
+                }
+                try{
+                    queueNumber = Integer.parseInt(queueInput);
+                    if(queueNumber > 0 && queueNumber <= NUMBER_OF_QUEUES){
+                        validInput = true;
+                    } else {
+                        System.out.println("Invalid queue number");
+                    }
+                } catch(NumberFormatException e){
+                    System.out.println("Invalid input. Please enter a valid integer.");
+                }
+            }
             FoodQueue queue = queues[queueNumber - 1];
             if(!queue.isQueueEmpty()){
-                queue.addQueueIncome(queue.getCustomer(0).getBurgersRequired() * BURGER_PRICE);
-                burgerStock -= queue.getCustomer(0).getBurgersRequired();
-                System.out.println(queue.getCustomer(0).getFullName() + " has been served");
-                queue.removeCustomer(0);
-                if(!waitingQueue.isEmpty()){
-                    Customer nextCustomer = waitingQueue.dequeue();
-                    queue.addCustomer(nextCustomer);
-                    System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
+                int burgersRequired = queue.getCustomer(0).getBurgersRequired();
+                if(burgersRequired <= burgerStock){
+                    queue.addQueueIncome(burgersRequired * BURGER_PRICE);
+                    burgerStock -= burgersRequired;
+                    System.out.println(queue.getCustomer(0).getFullName() + " has been served");
+                    queue.removeCustomer(0);
+                    if(!waitingQueue.isEmpty()){
+                        Customer nextCustomer = waitingQueue.dequeue();
+                        queue.addCustomer(nextCustomer);
+                        System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
+                    }
+                } else {
+                    System.out.println("Not enough burgers in stock to serve customer");
                 }
             } else {
                 System.out.println("Queue is empty");
             }
-        } else {
-            System.out.println("Invalid queue number");
+        } catch (Exception e) {
+            System.out.println("Error occurred while removing served customer: " + e.getMessage());
         }
     }
 

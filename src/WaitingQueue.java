@@ -1,16 +1,42 @@
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 public class WaitingQueue {
 
     private int front,rear;
-    private Customer[] queue;
+    public Customer[] queue;
 
     public WaitingQueue(int initialSize){
         this.front = this.rear = -1;
         this.queue = new Customer[initialSize];
     }
 
+    public ArrayList<Customer> getCustomerList() {
+        ArrayList<Customer> customerList = new ArrayList<Customer>();
+        if (!isEmpty()) {
+            int j = front;
 
+            do {
+                if (queue[j] != null){
+                customerList.add(queue[j]);
+                }
+                j = (j+1) % queue.length;
+            } while (j != front);
+        }
+        return customerList;
+    }
+
+    public void reset() {
+        this.front = this.rear = -1;
+        this.queue = new Customer[queue.length];
+    }
+
+    public int size() {
+        if (isEmpty()) {
+            return 0;
+        }
+        return (queue.length + rear - front) % queue.length + 1;
+    }
 
     public void enqueue (Customer customer) {
         if(isFull()) {
@@ -48,6 +74,7 @@ public class WaitingQueue {
     }
 
     public boolean isFull() {
+
         return (rear + 1) % queue.length == front;
     }
 

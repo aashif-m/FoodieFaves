@@ -33,8 +33,8 @@ public class FoodieFavesQueueManager {
                 case "103", "RCQ" -> removeCustomerLocation(input);
                 case "104", "PCQ" -> removeServedCustomer(input);
                 case "105", "VCS" -> viewSortedCustomerNames();
-                case "106", "SPD" -> storeProgramData(SAVE_FILE_NAME, queues, burgerStock);
-                case "107", "LPD" -> loadProgramData(SAVE_FILE_NAME, queues);
+                case "106", "SPD" -> storeProgramData(SAVE_FILE_NAME, queues, burgerStock, waitingQueue);
+                case "107", "LPD" -> loadProgramData(SAVE_FILE_NAME, queues, waitingQueue);
                 case "108", "STK" -> viewRemainingBurgerStock();
                 case "109", "AFS" -> addBurgerStock(input);
                 case "110", "IFQ" -> viewQueueIncome(queues);
@@ -147,7 +147,8 @@ public class FoodieFavesQueueManager {
             FoodQueue shortestQueue = getShortestQueue(queues);
             shortestQueue.addCustomer(new Customer(firstName, lastName, burgersRequired));
         } else {
-            System.out.println("No empty queues available");
+            System.out.println("No empty queues available. Adding customer to waiting queue.");
+            waitingQueue.enqueue(new Customer(firstName, lastName, burgersRequired));
         }
     }
 
@@ -161,6 +162,11 @@ public class FoodieFavesQueueManager {
             if(customerPosition > 0 && customerPosition <= queue.getQueueSize()){
                 System.out.println(queue.getCustomer(customerPosition - 1).getFullName() + " has been removed");
                 queue.removeCustomer(customerPosition - 1);
+                if(!waitingQueue.isEmpty()){
+                    Customer nextCustomer = waitingQueue.dequeue();
+                    queue.addCustomer(nextCustomer);
+                    System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
+                }
             } else {
                 System.out.println("Invalid customer position");
             }
@@ -179,6 +185,11 @@ public class FoodieFavesQueueManager {
                 burgerStock -= queue.getCustomer(0).getBurgersRequired();
                 System.out.println(queue.getCustomer(0).getFullName() + " has been served");
                 queue.removeCustomer(0);
+                if(!waitingQueue.isEmpty()){
+                    Customer nextCustomer = waitingQueue.dequeue();
+                    queue.addCustomer(nextCustomer);
+                    System.out.println(nextCustomer.getFullName() + " from the waiting queue has been added to Queue " + queueNumber);
+                }
             } else {
                 System.out.println("Queue is empty");
             }
@@ -249,44 +260,60 @@ public class FoodieFavesQueueManager {
         }
     }
 
-    public static void storeProgramData(String fileName, FoodQueue[] queues, int burgerStock) {
+    public static void storeProgramData(String fileName, FoodQueue[] queues, int burgerStock, WaitingQueue waitingQueue) {
         try {
             FileWriter writer = new FileWriter(fileName);
             for (FoodQueue queue : queues) {
-                writer.write(queue.getQueueIncome() + ",");
-                ArrayList<Customer> customers = queue.getCustomerList();
-                for (Customer customer : customers) {
-                    writer.write(customer.getFullName() + ":" + customer.getBurgersRequired() + ",");
+                writer.write(queue.getCustomerList().size() + "\n");
+                for (Customer customer : queue.getCustomerList()) {
+                    writer.write(customer.getFirstName() + "," + customer.getLastName() + "," + customer.getBurgersRequired() + "\n");
                 }
-                writer.write(";");
+                writer.write(queue.getQueueIncome() + "\n");
+                writer.write("\n");
             }
-            writer.write(burgerStock);
-            writer.close();
+            writer.write(burgerStock + "\n");
+            writer.write(waitingQueue.size() + "\n");
+            for (Customer customer : waitingQueue.getCustomerList()) {
+                writer.write(customer.getFirstName() + "," + customer.getLastName() + "," + customer.getBurgersRequired() + "\n");
+            }
+            writer.close();  
         } catch (IOException e) {
             System.out.println("An error occurred while storing program data.");
         }
     }
 
-    public static void loadProgramData(String fileName, FoodQueue[] queues) {
+    public static void loadProgramData(String fileName, FoodQueue[] queues, WaitingQueue waitingQueue) {
         try {
             File file = new File(fileName);
             Scanner input = new Scanner(file);
-            String data = input.nextLine();
-            String[] dataArray = data.split(";");
-            for (int i = 0; i < dataArray.length - 1; i++) {
-                String[] queueData = dataArray[i].split(",");
-                queues[i].setQueueIncome(Integer.parseInt(queueData[0]));
-                for (int j = 1; j < queueData.length; j++) {
-                    String[] customerData = queueData[j].split(":");
-                    String[] nameData = customerData[0].split(" ");
-                    String firstName = nameData[0];
-                    String lastName = nameData[1];
-                    int burgersRequired = Integer.parseInt(customerData[1]);
-                    Customer customer = new Customer(firstName, lastName, burgersRequired);
-                    queues[i].addCustomer(customer);
+            for (FoodQueue queue : queues) {
+                int queueSize = input.nextInt();
+                input.nextLine();
+                for (int i = 0; i < queueSize; i++) {
+                    String[] customerData = input.nextLine().split(",");
+                    String firstName = customerData[0];
+                    String lastName = customerData[1];
+                    int burgersRequired = Integer.parseInt(customerData[2]);
+                    queue.addCustomer(new Customer(firstName, lastName, burgersRequired));
                 }
+                int queueIncome = input.nextInt();
+                input.nextLine();
+                queue.setQueueIncome(queueIncome);
+                input.nextLine();
+
             }
-            burgerStock = Integer.parseInt(dataArray[dataArray.length - 1]);
+            burgerStock = input.nextInt();
+            input.nextLine();
+            int waitingQueueSize = input.nextInt();
+            input.nextLine();
+            waitingQueue.reset();
+            for (int i = 0; i < waitingQueueSize; i++) {
+                String[] waitingQueueData = input.nextLine().split(",");
+                String firstName = waitingQueueData[0];
+                String lastName = waitingQueueData[1];
+                int burgersRequired = Integer.parseInt(waitingQueueData[2]);
+                waitingQueue.enqueue(new Customer(firstName, lastName, burgersRequired));
+            }
             input.close();
         } catch (FileNotFoundException e) {
             System.out.println("File not found.");
